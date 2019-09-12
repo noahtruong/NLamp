@@ -1,7 +1,12 @@
-/*
 #include <Arduino.h>
 #include <FastLED.h>
 #include <pixeltypes.h>
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEServer.h>
+
+#define SERVICE_UUID "70e6c00e-d075-4f09-ae77-c952359aaff3"
+#define CHARACTERISTIC_UUID "92841757-ad57-438d-8d05-dbbf3072a6ca"
 
 #define LED_PIN 14
 #define NUM_LEDS 120
@@ -21,9 +26,6 @@ CRGB leds[NUM_LEDS];
 CRGBPalette16 currentPalette;
 TBlendType currentBlending;
 
-extern CRGBPalette16 myRedWhiteBluePalette;
-extern const TProgmemPalette16 myRedWhiteBluePalette_p PROGMEM;
-
 int state = RANDOM;
 int r = 0;
 int g = 0;
@@ -32,16 +34,9 @@ String sR = "";
 String sG = "";
 String sB = "";
 
-void setup() {
-  Serial.begin(115200);
-  Serial.println("serial ready");
-  delay(3000);
-  FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  FastLED.setBrightness(BRIGHTNESS);
+bool button = false;
 
-  currentPalette = RainbowColors_p;
-  currentBlending = LINEARBLEND;
-}
+
 void FillLEDsFromPaletteColors(uint8_t colorIndex){
   uint8_t brightness = 255;
   for(int i = 0; i<NUM_LEDS; i++){
@@ -64,93 +59,6 @@ void customColor(uint8_t r, uint8_t g, uint8_t b){
   Serial.println(r);
   Serial.print(g);
   Serial.print(b);
-}
-void loop() {
-
-  if(Serial.available() > 0){
-    state = Serial.read();
-  }
-
-  if(state == OFF){
-    FastLED.setBrightness(0);
-  }
-  else if(state == ON){
-    FastLED.setBrightness(BRIGHTNESS);
-  }
-  else if(state == RANDOM)
-  {
-    FastLED.setBrightness(BRIGHTNESS);
-    randomPalette();
-  }
-  /*
-  else if(state == CUSTOM)
-  {
-    FastLED.setBrightness(BRIGHTNESS);
-    sR = Serial.readStringUntil('\n');
-    sG = Serial.readStringUntil('\n');
-    sB = Serial.readStringUntil('\n');
-    r = (int)sR.toInt();
-    g = (int)sG.toInt();
-    b = (int)sB.toInt();
-    customColor(r,g,b);
-  }
-  
-
-  static uint8_t startIndex = 0;
-  startIndex = startIndex +1; //motion speed
-
-  FillLEDsFromPaletteColors(startIndex);
-
-  FastLED.show();
-  FastLED.delay(1000/UPDATES_PER_SECOND);
-}
-*/
-#include <FastLED.h>
-
-#define LED_PIN     14
-#define NUM_LEDS    20
-#define BRIGHTNESS  64
-#define LED_TYPE    WS2812B
-#define COLOR_ORDER GRB
-CRGB leds[NUM_LEDS];
-
-#define UPDATES_PER_SECOND 100
-
-// This example shows several ways to set up and use 'palettes' of colors
-// with FastLED.
-//
-// These compact palettes provide an easy way to re-colorize your
-// animation on the fly, quickly, easily, and with low overhead.
-//
-// USING palettes is MUCH simpler in practice than in theory, so first just
-// run this sketch, and watch the pretty lights as you then read through
-// the code.  Although this sketch has eight (or more) different color schemes,
-// the entire sketch compiles down to about 6.5K on AVR.
-//
-// FastLED provides a few pre-configured color palettes, and makes it
-// extremely easy to make up your own color schemes with palettes.
-//
-// Some notes on the more abstract 'theory and practice' of
-// FastLED compact palettes are at the bottom of this file.
-
-
-
-CRGBPalette16 currentPalette;
-TBlendType    currentBlending;
-
-bool button = false;
-
-
-extern CRGBPalette16 myRedWhiteBluePalette;
-extern const TProgmemPalette16 myRedWhiteBluePalette_p PROGMEM;
-void FillLEDsFromPaletteColors( uint8_t colorIndex)
-{
-    uint8_t brightness = 255;
-    
-    for( int i = 0; i < NUM_LEDS; i++) {
-        leds[i] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
-        colorIndex += 3;
-    }
 }
 
 // This function fills the palette with totally random colors.
@@ -191,32 +99,6 @@ void SetupPurpleAndGreenPalette()
                                    purple, purple, black,  black );
 }
 
-
-// This example shows how to set up a static color palette
-// which is stored in PROGMEM (flash), which is almost always more
-// plentiful than RAM.  A static PROGMEM palette like this
-// takes up 64 bytes of flash.
-const TProgmemPalette16 myRedWhiteBluePalette_p PROGMEM =
-{
-    CRGB::Red,
-    CRGB::Gray, // 'white' is too bright compared to red and blue
-    CRGB::Blue,
-    CRGB::Black,
-    
-    CRGB::Red,
-    CRGB::Gray,
-    CRGB::Blue,
-    CRGB::Black,
-    
-    CRGB::Red,
-    CRGB::Red,
-    CRGB::Gray,
-    CRGB::Gray,
-    CRGB::Blue,
-    CRGB::Blue,
-    CRGB::Black,
-    CRGB::Black
-};
 // There are several different palettes of colors demonstrated here.
 //
 // FastLED provides several 'preset' palettes: RainbowColors_p, RainbowStripeColors_p,
@@ -241,14 +123,65 @@ void ChangePalettePeriodically()
         if( secondHand == 35)  { SetupBlackAndWhiteStripedPalette();       currentBlending = LINEARBLEND; }
         if( secondHand == 40)  { currentPalette = CloudColors_p;           currentBlending = LINEARBLEND; }
         if( secondHand == 45)  { currentPalette = PartyColors_p;           currentBlending = LINEARBLEND; }
-        if( secondHand == 50)  { currentPalette = myRedWhiteBluePalette_p; currentBlending = NOBLEND;  }
-        if( secondHand == 55)  { currentPalette = myRedWhiteBluePalette_p; currentBlending = LINEARBLEND; }
     }
 }
 
+void setup() {
+
+    Serial.begin(115200);
+    while(!Serial);
+    Serial.println("serial ready");
+
+    BLEDevice::init("NLamp");
+    BLEServer *pServer = BLEDevice::createServer();
+    BLEService *pService = pServer->createService(SERVICE_UUID);
+    BLECharacteristic *pCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID,BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
+    pCharacteristic->setValue("NLamp Ready");
+    pService->start();
+    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+    pAdvertising->addServiceUUID(SERVICE_UUID);
+    pAdvertising->setScanResponse(true);
+    //pAdvertising->setMinPreferred(0x06);
+    //pAdvertising->setMinPreferred(0x12);
+    BLEDevice::startAdvertising();
+    Serial.println("BLE Device Ready");
 
 
+    pinMode(23,INPUT_PULLUP);
+    delay( 3000 ); // power-up safety delay
+    FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
+    FastLED.setBrightness(  BRIGHTNESS );
+    
+    currentPalette = RainbowColors_p;
+    currentBlending = LINEARBLEND;
+}
 
+
+void loop()
+{
+    if(digitalRead(23) == LOW)
+    {
+      button = !button;
+      delay(500);
+    }
+    if(button)
+    {
+      //Serial.println("mem");
+    }
+    else
+    {
+      //Serial.println("not mem");
+    }
+    //ChangePalettePeriodically();
+    
+    static uint8_t startIndex = 0;
+    startIndex = startIndex + 1; /* motion speed */
+    
+    FillLEDsFromPaletteColors( startIndex);
+    
+    FastLED.show();
+    FastLED.delay(1000 / UPDATES_PER_SECOND);
+}
 
 // Additional notes on FastLED compact palettes:
 //
@@ -271,47 +204,3 @@ void ChangePalettePeriodically()
 // palette to Green (0,255,0) and Blue (0,0,255), and then retrieved 
 // the first sixteen entries from the virtual palette (of 256), you'd get
 // Green, followed by a smooth gradient from green-to-blue, and then Blue.
-
-
-void setup() {
-
-
-    Serial.begin(115200);
-    while(!Serial);
-    Serial.println("serial ready");
-    pinMode(23,INPUT_PULLUP);
-    delay( 3000 ); // power-up safety delay
-    FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
-    FastLED.setBrightness(  BRIGHTNESS );
-    
-    currentPalette = RainbowColors_p;
-    currentBlending = LINEARBLEND;
-}
-
-
-void loop()
-{
-    if(digitalRead(23) == LOW)
-    {
-      button = !button;
-      delay(500);
-    }
-    if(button)
-    {
-      Serial.println("mem");
-    }
-    else
-    {
-      Serial.println("not mem");
-    }
-    //ChangePalettePeriodically();
-    
-    static uint8_t startIndex = 0;
-    startIndex = startIndex + 1; /* motion speed */
-    
-    FillLEDsFromPaletteColors( startIndex);
-    
-    FastLED.show();
-    FastLED.delay(1000 / UPDATES_PER_SECOND);
-}
-
