@@ -1,23 +1,21 @@
 #include <Arduino.h>
 #include <FastLED.h>
 #include <pixeltypes.h>
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEServer.h>
+#include <BluetoothSerial.h>
 
 #define SERVICE_UUID "70e6c00e-d075-4f09-ae77-c952359aaff3"
 #define CHARACTERISTIC_UUID "92841757-ad57-438d-8d05-dbbf3072a6ca"
 
 #define LED_PIN 14
-#define NUM_LEDS 120
-#define BRIGHTNESS 64
+#define NUM_LEDS 66
+#define BRIGHTNESS 255
 #define LED_TYPE WS2812B
 #define COLOR_ORDER GRB
 
-#define OFF 0
-#define ON 1
-#define RANDOM 2
-#define CUSTOM 3
+#define OFF "0"
+#define ON "1"
+#define RANDOM "2"
+#define CUSTOM "3"
 
 CRGB leds[NUM_LEDS];
 
@@ -25,8 +23,9 @@ CRGB leds[NUM_LEDS];
 
 CRGBPalette16 currentPalette;
 TBlendType currentBlending;
-
-int state = RANDOM;
+BluetoothSerial SerialBT;
+uint8_t brightness = 64;
+String state = ON;
 int r = 0;
 int g = 0;
 int b = 0;
@@ -34,11 +33,13 @@ String sR = "";
 String sG = "";
 String sB = "";
 
-bool button = false;
+int buttIndex = 1;
 
+int patternIndex = 0;
+
+bool button = true;
 
 void FillLEDsFromPaletteColors(uint8_t colorIndex){
-  uint8_t brightness = 255;
   for(int i = 0; i<NUM_LEDS; i++){
     leds[i] = ColorFromPalette(currentPalette, colorIndex, brightness, currentBlending);
   }
@@ -106,7 +107,7 @@ void SetupPurpleAndGreenPalette()
 //
 // Additionally, you can manually define your own color palettes, or you can write
 // code that creates color palettes on the fly.  All are shown here.
-
+/*
 void ChangePalettePeriodically()
 {
     uint8_t secondHand = (millis() / 1000) % 60;
@@ -125,32 +126,18 @@ void ChangePalettePeriodically()
         if( secondHand == 45)  { currentPalette = PartyColors_p;           currentBlending = LINEARBLEND; }
     }
 }
-
+*/
 void setup() {
 
     Serial.begin(115200);
     while(!Serial);
     Serial.println("serial ready");
-
-    BLEDevice::init("NLamp");
-    BLEServer *pServer = BLEDevice::createServer();
-    BLEService *pService = pServer->createService(SERVICE_UUID);
-    BLECharacteristic *pCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID,BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
-    pCharacteristic->setValue("NLamp Ready");
-    pService->start();
-    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-    pAdvertising->addServiceUUID(SERVICE_UUID);
-    pAdvertising->setScanResponse(true);
-    //pAdvertising->setMinPreferred(0x06);
-    //pAdvertising->setMinPreferred(0x12);
-    BLEDevice::startAdvertising();
-    Serial.println("BLE Device Ready");
-
+    SerialBT.begin("ESP32");
 
     pinMode(23,INPUT_PULLUP);
     delay( 3000 ); // power-up safety delay
     FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
-    FastLED.setBrightness(  BRIGHTNESS );
+    FastLED.setBrightness(BRIGHTNESS);
     
     currentPalette = RainbowColors_p;
     currentBlending = LINEARBLEND;
@@ -159,28 +146,65 @@ void setup() {
 
 void loop()
 {
-    if(digitalRead(23) == LOW)
+  /*
+    if(SerialBT.readString() == OFF)
     {
-      button = !button;
-      delay(500);
+      brightness = 0;
+      Serial.println("off");
     }
-    if(button)
+    if(SerialBT.readString() == ON)
     {
-      //Serial.println("mem");
+      brightness = 255;
+      Serial.println("on");
     }
-    else
+    if(SerialBT.readString() == RANDOM)
     {
-      //Serial.println("not mem");
+      SetupTotallyRandomPalette();
+      Serial.println("random");
     }
-    //ChangePalettePeriodically();
-    
+    if(SerialBT.readString() == CUSTOM)
+    {
+      sR = SerialBT.readStringUntil('\n');
+      sG = SerialBT.readStringUntil('\n');
+      sB = SerialBT.readStringUntil('\n');
+      r = (int) sR.toInt();
+      g = (int) sG.toInt();
+      b = (int) sB.toInt();
+      Serial.println(r);
+      Serial.println(g);
+      Serial.println(b);
+      for( int i = 0; i < 16; i++) 
+      {
+        currentPalette[i] = CRGB(r,g,b);
+      }
+    }
+*/
     static uint8_t startIndex = 0;
     startIndex = startIndex + 1; /* motion speed */
-    
-    FillLEDsFromPaletteColors( startIndex);
+    //ChangePalettePeriodically();
+
+    FillLEDsFromPaletteColors(startIndex);
     
     FastLED.show();
     FastLED.delay(1000 / UPDATES_PER_SECOND);
+
+    if(digitalRead(23) == LOW)
+    { 
+      buttIndex += 1;
+      delay(500);
+      if(buttIndex > 4)
+      {
+        buttIndex = 0;
+      }
+    }
+
+    if(buttIndex == 0){brightness = 0;}
+    if(buttIndex == 1){brightness = 255;}
+    if(buttIndex == 2){currentPalette = RainbowColors_p;}
+    if(buttIndex == 3){currentPalette = LavaColors_p;}
+    if(buttIndex == 4){currentPalette = OceanColors_p;}
+
+    
 }
 
 // Additional notes on FastLED compact palettes:
