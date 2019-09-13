@@ -33,7 +33,7 @@ String sR = "";
 String sG = "";
 String sB = "";
 
-int buttIndex = 1;
+int buttIndex = 2;
 
 int patternIndex = 0;
 
@@ -99,7 +99,28 @@ void SetupPurpleAndGreenPalette()
                                    green,  green,  black,  black,
                                    purple, purple, black,  black );
 }
+extern const TProgmemRGBPalette16 orange FL_PROGMEM =
+{
+    CRGB::Orange,
+    CRGB::Orange,
+    CRGB::Orange,
+    CRGB::Orange,
 
+    CRGB::Orange,
+    CRGB::Orange,
+    CRGB::Orange,
+    CRGB::Orange,
+
+    CRGB::Orange,
+    CRGB::Orange,
+    CRGB::Orange,
+    CRGB::Orange,
+
+    CRGB::Orange,
+    CRGB::Orange,
+    CRGB::Orange,
+    CRGB::Orange,
+};
 // There are several different palettes of colors demonstrated here.
 //
 // FastLED provides several 'preset' palettes: RainbowColors_p, RainbowStripeColors_p,
@@ -201,7 +222,7 @@ void loop()
     if(buttIndex == 0){brightness = 0;}
     if(buttIndex == 1){brightness = 255;}
     if(buttIndex == 2){currentPalette = RainbowColors_p;}
-    if(buttIndex == 3){currentPalette = LavaColors_p;}
+    if(buttIndex == 3){currentPalette = orange;}
     if(buttIndex == 4){currentPalette = OceanColors_p;}
 
     
