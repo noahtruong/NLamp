@@ -32,7 +32,7 @@ int b = 0;
 String sR = "";
 String sG = "";
 String sB = "";
-bool paletteMode = 1;
+bool paletteMode = true;
 
 int ledList[6][11] =
 {
@@ -52,12 +52,10 @@ int ledList[6][11] =
 
 int buttIndex = 2;
 
-int patternIndex = 0;
-
 bool button = true;
 
 void setLEDRow(){
-  paletteMode = 0;
+  paletteMode = false;
   int randomR[11] = {random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8()};
   int randomG[11] = {random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8()};
   int randomB[11] = {random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8()};
@@ -65,18 +63,16 @@ void setLEDRow(){
   {
     leds[i] = CRGB::White;
   }
-
-  for(int i = 0; i<11;i++)
-  {
-    leds[ledList[0][i]] = CRGB(randomR[i],randomG[i],randomB[i]);
-    leds[ledList[1][i]] = CRGB(randomR[i],randomG[i],randomB[i]);
-    leds[ledList[2][i]] = CRGB(randomR[i],randomG[i],randomB[i]);
-    leds[ledList[3][i]] = CRGB(randomR[i],randomG[i],randomB[i]);
-    leds[ledList[4][i]] = CRGB(randomR[i],randomG[i],randomB[i]);
-    leds[ledList[5][i]] = CRGB(randomR[i],randomG[i],randomB[i]);
-    delay(50);
-  }
-  paletteMode = 1;
+//  for(int i = 0; i<11;i++)
+//  {
+    leds[ledList[0][0]] = CRGB::Blue;
+    leds[ledList[1][0]] = CRGB::Blue;
+    leds[ledList[3][0]] = CRGB::Blue;
+    leds[ledList[4][0]] = CRGB::Blue;
+    leds[ledList[5][0]] = CRGB::Blue;
+    delay(500);
+//  }
+  paletteMode = true;
 }
 
 void FillLEDsFromPaletteColors(uint8_t colorIndex){
@@ -240,15 +236,6 @@ void loop()
       }
     }
 */
-    static uint8_t startIndex = 0;
-    startIndex = startIndex + 1; /* motion speed */
-    //ChangePalettePeriodically();
-    if(paletteMode == 1)
-    {
-      FillLEDsFromPaletteColors(startIndex);
-    }
-    FastLED.show();
-    FastLED.delay(1000 / UPDATES_PER_SECOND);
 
     if(digitalRead(23) == LOW)
     { 
@@ -266,6 +253,16 @@ void loop()
     if(buttIndex == 3){currentPalette = orange;}
     if(buttIndex == 4){currentPalette = OceanColors_p;}
     if(buttIndex == 5){setLEDRow();}
+    static uint8_t startIndex = 0;
+    startIndex = startIndex + 1; /* motion speed */
+    //ChangePalettePeriodically();
+    if(paletteMode == true)
+    {
+      FillLEDsFromPaletteColors(startIndex);
+    }
+    FastLED.show();
+    FastLED.delay(1000 / UPDATES_PER_SECOND);
+
     
 }
 
