@@ -32,12 +32,52 @@ int b = 0;
 String sR = "";
 String sG = "";
 String sB = "";
+bool paletteMode = 1;
+
+int ledList[6][11] =
+{
+0,21,22,43,44,65,
+1,20,23,42,45,64,
+2,19,24,41,46,63,
+3,18,25,40,47,62,
+4,17,26,39,48,61,
+5,16,27,38,49,60,
+6,15,28,37,50,59,
+7,14,29,36,51,58,
+8,13,30,35,52,57,
+9,12,31,34,53,56,
+10,11,32,33,54,55
+};
+
 
 int buttIndex = 2;
 
 int patternIndex = 0;
 
 bool button = true;
+
+void setLEDRow(){
+  paletteMode = 0;
+  int randomR[11] = {random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8()};
+  int randomG[11] = {random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8()};
+  int randomB[11] = {random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8()};
+  for(int i = 0; i<NUM_LEDS;i++)
+  {
+    leds[i] = CRGB::White;
+  }
+
+  for(int i = 0; i<11;i++)
+  {
+    leds[ledList[0][i]] = CRGB(randomR[i],randomG[i],randomB[i]);
+    leds[ledList[1][i]] = CRGB(randomR[i],randomG[i],randomB[i]);
+    leds[ledList[2][i]] = CRGB(randomR[i],randomG[i],randomB[i]);
+    leds[ledList[3][i]] = CRGB(randomR[i],randomG[i],randomB[i]);
+    leds[ledList[4][i]] = CRGB(randomR[i],randomG[i],randomB[i]);
+    leds[ledList[5][i]] = CRGB(randomR[i],randomG[i],randomB[i]);
+    delay(50);
+  }
+  paletteMode = 1;
+}
 
 void FillLEDsFromPaletteColors(uint8_t colorIndex){
   for(int i = 0; i<NUM_LEDS; i++){
@@ -203,9 +243,10 @@ void loop()
     static uint8_t startIndex = 0;
     startIndex = startIndex + 1; /* motion speed */
     //ChangePalettePeriodically();
-
-    FillLEDsFromPaletteColors(startIndex);
-    
+    if(paletteMode == 1)
+    {
+      FillLEDsFromPaletteColors(startIndex);
+    }
     FastLED.show();
     FastLED.delay(1000 / UPDATES_PER_SECOND);
 
@@ -213,7 +254,7 @@ void loop()
     { 
       buttIndex += 1;
       delay(500);
-      if(buttIndex > 4)
+      if(buttIndex > 5)
       {
         buttIndex = 0;
       }
@@ -224,7 +265,7 @@ void loop()
     if(buttIndex == 2){currentPalette = RainbowColors_p;}
     if(buttIndex == 3){currentPalette = orange;}
     if(buttIndex == 4){currentPalette = OceanColors_p;}
-
+    if(buttIndex == 5){setLEDRow();}
     
 }
 
