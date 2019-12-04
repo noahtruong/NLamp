@@ -63,15 +63,14 @@ void setLEDRow(){
   {
     leds[i] = CRGB::White;
   }
-//  for(int i = 0; i<11;i++)
-//  {
-    leds[ledList[0][0]] = CRGB::Blue;
-    leds[ledList[1][0]] = CRGB::Blue;
-    leds[ledList[3][0]] = CRGB::Blue;
-    leds[ledList[4][0]] = CRGB::Blue;
-    leds[ledList[5][0]] = CRGB::Blue;
-    delay(500);
-//  }
+  for(int i = 0; i<NUM_LEDS;i++)
+  {
+    leds[i] = CRGB::Blue;
+    FastLED.show();
+    leds[i] = CRGB::White;
+    delay(50);
+  }
+
   paletteMode = true;
 }
 
