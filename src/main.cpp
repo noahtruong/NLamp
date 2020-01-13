@@ -2,7 +2,7 @@
 #include <FastLED.h>
 #include <pixeltypes.h>
 #include <BluetoothSerial.h>
-
+//testing
 #define SERVICE_UUID "70e6c00e-d075-4f09-ae77-c952359aaff3"
 #define CHARACTERISTIC_UUID "92841757-ad57-438d-8d05-dbbf3072a6ca"
 
