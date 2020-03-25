@@ -34,7 +34,7 @@ String sG = "";
 String sB = "";
 bool paletteMode = true;
 
-int ledList[6][11] =
+int ledList[11][6] =
 {
 0,21,22,43,44,65,
 1,20,23,42,45,64,
@@ -53,22 +53,33 @@ int ledList[6][11] =
 int buttIndex = 2;
 
 bool button = true;
+bool white = false;
 
 void setLEDRow(){
-  paletteMode = false;
-  int randomR[11] = {random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8()};
-  int randomG[11] = {random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8()};
-  int randomB[11] = {random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8()};
-  for(int i = 0; i<NUM_LEDS;i++)
+  //paletteMode = false;
+  //int randomR[11] = {random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8()};
+  //int randomG[11] = {random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8()};
+  //int randomB[11] = {random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8(),random8()};
+  if(!white)
   {
-    leds[i] = CRGB::White;
+  for(int i = 0; i<NUM_LEDS;i++)
+   {
+      leds[i] = CRGB::White;
+      white = true;
+   }
   }
-  for(int i = 0; i<NUM_LEDS;i++)
+  for(int i = 0; i<11;i++)
   {
-    leds[i] = CRGB::Blue;
-    FastLED.show();
-    leds[i] = CRGB::White;
-    delay(50);
+    for(int j = 0; j<6;j++)
+    {
+      leds[ledList[i][j]] = CRGB::Blue;
+    }
+      FastLED.show();
+      for(int j = 0; j<6;j++)
+    {
+      leds[ledList[i][j]] = CRGB::Gold;
+      delay(50);
+    }
   }
 
   paletteMode = true;
